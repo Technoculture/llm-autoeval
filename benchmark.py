@@ -33,12 +33,15 @@ def benchmark_factory(name):
         "open_pubmedqa": PubMedQA,
         "medqa": MedQA,
         "medqa4": MedQA4,
-        "blurb": Blurb,
         "medicationqa": MedicationQA,
         "mmlu_medical": MMLU,
-        "mmlu_general": MMLU,
+        "arc": ARC,
+        "hellaswag":HellaSwag,
+        "winogrande": Winogrande,
+        "blurb": Blurb,
         "truthfulqa": TruthfulQA,
-        "gsm8k": GSM8K
+        "gsm8k": GSM8K,
+        "mmlu_general": MMLU,
     }
     if name not in factories:
         raise ValueError("Benchmark {} not found. \
@@ -615,6 +618,51 @@ class Blurb(Benchmark):
         if entity:
             entities.append(' '.join(entity))
         return entities
+    
+class ARC(Benchmark):
+    """
+    Huggingface card: https://huggingface.co/datasets/ai2_arc
+    """
+    def __init__(self, name='arc') -> None:
+        super().__init__(name)
+        self.hub_name = 'ai2_arc'
+        self.dir_name = 'ai2_arc'
+        self.path = os.path.join(ROOT_DIR, 'benchmarks', 'datasets', self.dir_name)
+        self.splits = ['train', 'validation', 'test']
+        self.subsets = ['ARC-Easy']
+
+    @staticmethod
+    def custom_preprocessing(row):
+        row["options"] = ' '.join(["{}. {}".format(label, text) for label, text in zip(row["choices"]['label'], row["choices"]['text'])])
+        return row
+
+
+class HellaSwag(Benchmark):
+
+    """
+    Huggingface card: https://huggingface.co/datasets/Rowan/hellaswag
+    """
+    def __init__(self, name='hellaswag') -> None:
+        super().__init__(name)
+        self.hub_name = 'Rowan/hellaswag'
+        self.dir_name = 'Rowan__hellaswag'
+        self.path = os.path.join(ROOT_DIR, 'benchmarks', 'datasets', self.dir_name)
+        self.splits = ['train', 'validation', 'test']
+
+
+class Winogrande(Benchmark):
+
+    """
+    Huggingface card: https://huggingface.co/datasets/winogrande
+    """
+    def __init__(self, name='winogrande') -> None:
+        super().__init__(name)
+        self.hub_name = 'winogrande'
+        self.dir_name = 'winogrande'
+        self.path = os.path.join(ROOT_DIR, 'benchmarks', 'datasets', self.dir_name)
+        self.splits = ['train', 'validation', 'test']
+        self.subsets = ["winogrande_debiased"]
+
 
 
 
