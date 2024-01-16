@@ -28,7 +28,7 @@ def benchmark_factory(name):
     """
     # Note: benchmark is instantiated *after* selection.
     factories = {
-        "medmcqa": MedMCQA,
+        "medmcqa": Medmcqa,
         "pubmedqa": ClosedPubMedQA,
         "open_pubmedqa": PubMedQA,
         "medqa": MedQA,
@@ -151,38 +151,44 @@ class Benchmark:
         :param local_path: str (optional), the path to a directory holding train and test json local data files.
         """
         print('='*50 +f'\nLoading data for benchmark {self.name}.\n')
-        if partition not in self.splits:
-            raise ValueError("Please provide a valid partition split: {}".format(self.splits))
-        if local_path:
-            self.local_path = local_path
-        if not os.path.exists(self.path):
-            os.makedirs(self.path)
-            if self.local_path:
-                self.load_from_local()
-            else:
-                self.load_from_hub()
-        try:
-            if self.local_path:
-                dataset = load_from_disk(self.path)
-                if partition == 'train':
-                    self.train_data = dataset['train']
-                elif partition in ['test', 'validation']:
-                    self.test_data = dataset[partition]
-            else:
-                if self.subsets is None:
-                    if partition == 'train':
-                        self.train_data = load_dataset(self.path, split=partition)
-                    elif partition in ['test', 'validation']:
-                        self.test_data = load_dataset(self.path, split=partition)
+        if self.name == "hellaswag":
+            if partition == 'train':
+                self.train_data = load_dataset("Rowan/hellaswag", split=partition)
+            elif partition in ['test', 'validation']:
+                self.test_data = load_dataset("Rowan/hellaswag", split=partition)
+        else:
+            if partition not in self.splits:
+                raise ValueError("Please provide a valid partition split: {}".format(self.splits))
+            if local_path:
+                self.local_path = local_path
+            if not os.path.exists(self.path):
+                os.makedirs(self.path)
+                if self.local_path:
+                    self.load_from_local()
                 else:
+                    self.load_from_hub()
+            try:
+                if self.local_path:
+                    dataset = load_from_disk(self.path)
                     if partition == 'train':
-                        self.train_data = aggregate_datasets(self.path, self.subsets, partition=partition)
+                        self.train_data = dataset['train']
                     elif partition in ['test', 'validation']:
-                        self.test_data = aggregate_datasets(self.path, self.subsets, partition=partition)
+                        self.test_data = dataset[partition]
+                else:
+                    if self.subsets is None:
+                        if partition == 'train':
+                            self.train_data = load_dataset(self.path, split=partition)
+                        elif partition in ['test', 'validation']:
+                            self.test_data = load_dataset(self.path, split=partition)
+                    else:
+                        if partition == 'train':
+                            self.train_data = aggregate_datasets(self.path, self.subsets, partition=partition)
+                        elif partition in ['test', 'validation']:
+                            self.test_data = aggregate_datasets(self.path, self.subsets, partition=partition)
 
-        except ValueError as e:
-            print(e)
-            raise ValueError("Couldn't load benchmark {} from local path.".format(self.name))
+            except ValueError as e:
+                print(e)
+                raise ValueError("Couldn't load benchmark {} from local path.".format(self.name))
 
     def save_data(self, partition='train'):
         """
@@ -319,7 +325,7 @@ class Benchmark:
         self.generations = pd.read_json(path)
 
 
-class MedMCQA(Benchmark):
+class Medmcqa(Benchmark):
     '''
     MedMCQA is a large-scale, Multiple-Choice Question Answering (MCQA) dataset
     designed to address real-world medical entrance exam questions.
@@ -336,10 +342,9 @@ class MedMCQA(Benchmark):
 
     @staticmethod
     def custom_preprocessing(row):
-        options = [row['opa'], row['opb'], row['opc'], row['opd']]
+        row['options'] = "A. {} B. {} C. {} D. {}".format(row['opa'], row['opb'], row['opc'], row['opd'])
         answer = int(row['cop'])
-        row['prompt'] = format_mcq(row['question'], options)
-        row['gold'] = chr(ord('A')+answer) if answer in [0, 1, 2, 3] else None
+        row['answerKey'] = chr(ord('A')+answer) if answer in [0, 1, 2, 3] else None
         return row
 
 
@@ -662,6 +667,11 @@ class Winogrande(Benchmark):
         self.path = os.path.join(ROOT_DIR, 'benchmarks', 'datasets', self.dir_name)
         self.splits = ['train', 'validation', 'test']
         self.subsets = ["winogrande_debiased"]
+
+    @staticmethod
+    def custom_preprocessing(row):
+        row["options"] = ' '.join(["{}. {}".format(label, text) for label, text in zip(row["choices"]['label'], row["choices"]['text'])])
+        return row
 
 
 
