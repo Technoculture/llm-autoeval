@@ -27,12 +27,13 @@ def benchmark_factory(name):
     return:
     """
     # Note: benchmark is instantiated *after* selection.
+    # PubMedQA, MedQA datsets not loading.
     factories = {
         "medmcqa": Medmcqa,
         "pubmedqa": ClosedPubMedQA,
         "open_pubmedqa": PubMedQA,
         "medqa": MedQA,
-        "medqa4": MedQA4,
+        "medqa4": Medqa4,
         "medicationqa": MedicationQA,
         "mmlu_medical": MMLU,
         "arc": ARC,
@@ -276,12 +277,13 @@ class Benchmark:
             assert self.train_data is not None, "Please load the train data first."
             demonstrations = self.train_data.shuffle(seed=seed).select(range(shots))
             few_shot_prompt = '\n\n'.join([
-                '{}\nThe answer is: {}'.format(
-                    demo['prompt'],
-                    demo['gold']) for demo in demonstrations])
+                '{}\n{}\nThe answer is: {}'.format(
+                    demo['question'], demo['optionsKey'],
+                    demo['answerKey']) for demo in demonstrations])
+            print(few_shot_prompt)
 
         def _add_few_shot(row):
-            row['prompt'] = '{}\n\n{}'.format(few_shot_prompt, row['prompt'])
+            row['prompt'] = '{}\n\n{}'.format(few_shot_prompt, row['question'])
             return row
 
         self.test_data = self.test_data.map( _add_few_shot)
@@ -342,7 +344,7 @@ class Medmcqa(Benchmark):
 
     @staticmethod
     def custom_preprocessing(row):
-        row['options'] = "A. {} B. {} C. {} D. {}".format(row['opa'], row['opb'], row['opc'], row['opd'])
+        row['optionsKey'] = "A. {} B. {} C. {} D. {}".format(row['opa'], row['opb'], row['opc'], row['opd'])
         answer = int(row['cop'])
         row['answerKey'] = chr(ord('A')+answer) if answer in [0, 1, 2, 3] else None
         return row
@@ -444,7 +446,7 @@ class MedQA(Benchmark):
                 break
         return row
 
-class MedQA4(Benchmark):
+class Medqa4(Benchmark):
     '''
     MedQA is a dataset for solving medical problems collected from the professional medical board exams.
 
@@ -460,12 +462,10 @@ class MedQA4(Benchmark):
 
     @staticmethod
     def custom_preprocessing(row):
-        choices = [row['options'][opt] for opt in row['options']]
-        row["prompt"] = format_mcq(row['question'], choices)
-        for opt in row['options']:
-            if row['options'][opt] == row['answer']:
-                row['gold'] = opt
-                break
+
+        row['optionsKey'] = "A. {} B. {} C. {} D. {}".format(row['options']["A"], row['options']["B"], row['options']["C"], row['options']["D"])
+        row['answerKey'] = row['answer_idx']
+
         return row
 
 
@@ -638,7 +638,7 @@ class ARC(Benchmark):
 
     @staticmethod
     def custom_preprocessing(row):
-        row["options"] = ' '.join(["{}. {}".format(label, text) for label, text in zip(row["choices"]['label'], row["choices"]['text'])])
+        row["optionsKey"] = ' '.join(["{}. {}".format(label, text) for label, text in zip(row["choices"]['label'], row["choices"]['text'])])
         return row
 
 
