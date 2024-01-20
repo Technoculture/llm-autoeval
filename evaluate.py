@@ -2,18 +2,21 @@ import argparse
 import openai
 import dspy
 from benchmark import benchmark_factory
-import torch
 import logging
+import re
+from tqdm import tqdm
 
 def model_setting(model_name, API_KEY):
 
     model=dspy.OpenAI(model=model_name, api_key=API_KEY)
     dspy.settings.configure(lm=model)
+    return model
 
 def hfmodel_setting(model_name):
 
     model=dspy.HFModel(model=model_name)
     dspy.settings.configure(lm=model)
+    return model
 
 class MultipleChoiceQA(dspy.Signature):
     """Answer questions with single letter answers."""
@@ -47,6 +50,14 @@ def generate_responses(questions, option_sets):
         responses.append(generated_response)
     return responses
 
+def answer_prompt(prompts, model):
+    responses = []
+    for prompt in tqdm(prompts, desc="Generating Responses", unit="prompt"):
+        pred_response = model(prompt)
+        generated_response = pred_response[0]
+        responses.append(generated_response)
+    return responses
+
 def benchmark_preparation(benchmark_obj, args):
 
     partition = "test" if "test" in benchmark_obj.splits else "validation"
@@ -56,26 +67,33 @@ def benchmark_preparation(benchmark_obj, args):
             logging.info('Loading train data for few shot learning')
             benchmark_obj.load_data(partition='train')
             benchmark_obj.preprocessing(partition='train')
-            for seed in [1234, 432, 32]:
-                logging.info(f'Start seed {seed})')
-                logging.info(f'FEW SHOTS: {args.shots}')
-                benchmark_obj.add_few_shot(
-                    shots=args.shots,
-                    seed=seed)
+            logging.info(f'FEW SHOTS: {args.shots}')
+            benchmark_obj.add_few_shot(
+                    shots=args.shots)
+            
+def format_answer(predictions):
+    pred = []
+    for prediction in tqdm(predictions, desc="Formatting Answers", unit="prediction"):
+        matches = re.findall(r'The answer is: (\w)', prediction)
+        if len(matches) >= 26:
+            pred.append(matches[25])
+        else:
+            pred.append(None)
+    return pred
 
-def evaluate_model(benchmark_instance, questions, options):
+def evaluate_model(benchmark_instance, model):
 
-    # benchmark_instance.load_data(partition=partition)
-    # benchmark_instance.preprocessing(partition=partition)
-    # questions = benchmark_instance.test_data["question"][:5]
-    # options = benchmark_instance.test_data["options"][:5]
-    predictions = generate_responses(questions, options)
+    predictions = answer_prompt(benchmark_instance.test_data["prompt"][:1], model)
     print(predictions)
-    evaluate_predictions(predictions, benchmark_instance.test_data["answerKey"][:20])
+    if args.model == "microsoft./phi-2":
+        predictions = format_answer(predictions)
+
+    print(predictions)
+    evaluate_predictions(predictions, benchmark_instance.test_data["gold"][:1])
 
 def evaluate_predictions(pred, ref):
 
-    correct = sum(1 for pred, truth in zip(pred, ref) if pred[0] == truth)
+    correct = sum(1 for pred_letter, truth in zip(pred, ref) if pred_letter[0] == truth)
     total = len(ref)
     accuracy = (correct / total)
     print(f"Accuracy: {accuracy:.2%}")
@@ -83,20 +101,16 @@ def evaluate_predictions(pred, ref):
 def main(args):
 
     if args.model == "gpt-3.5-turbo" or args.model == "gpt-4":
-        model_setting(args.model, args.api_key)
+        model = model_setting(args.model, args.api_key)
     else:
-        hfmodel_setting(args.model)
+        model = hfmodel_setting(args.model)
 
     #Creating a benchmark instance, loading data and processing.
     benchmark_instance = benchmark_factory(args.benchmark)
     benchmark_preparation(benchmark_instance, args)
-
-    #Defining test set.
-    questions = benchmark_instance.test_data["question"][:20]
-    options = benchmark_instance.test_data["optionsKey"][:20]
     
     #Evaluating
-    evaluate_model(benchmark_instance, questions, options)
+    evaluate_model(benchmark_instance, model)
 
 
 if __name__ == "__main__":

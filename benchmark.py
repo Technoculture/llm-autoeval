@@ -27,7 +27,9 @@ def benchmark_factory(name):
     return:
     """
     # Note: benchmark is instantiated *after* selection.
-    # PubMedQA, MedQA datsets not loading.
+    # pubmedqa, open_pubmedqa, medqa  datsets not loading.
+    # Done: medmcqa, medqa4, arc, 
+    # Left: medication, truthful, mmlu, gsm8k, blurb, hellaswag, winogrande
     factories = {
         "medmcqa": Medmcqa,
         "pubmedqa": ClosedPubMedQA,
@@ -277,13 +279,12 @@ class Benchmark:
             assert self.train_data is not None, "Please load the train data first."
             demonstrations = self.train_data.shuffle(seed=seed).select(range(shots))
             few_shot_prompt = '\n\n'.join([
-                '{}\n{}\nThe answer is: {}'.format(
-                    demo['question'], demo['optionsKey'],
-                    demo['answerKey']) for demo in demonstrations])
-            print(few_shot_prompt)
+                '{}\nThe answer is: {}'.format(
+                    demo['prompt'],
+                    demo['gold']) for demo in demonstrations])
 
         def _add_few_shot(row):
-            row['prompt'] = '{}\n\n{}'.format(few_shot_prompt, row['question'])
+            row['prompt'] = '{}\n\n{}'.format(few_shot_prompt, row['prompt'])
             return row
 
         self.test_data = self.test_data.map( _add_few_shot)
@@ -345,8 +346,9 @@ class Medmcqa(Benchmark):
     @staticmethod
     def custom_preprocessing(row):
         row['optionsKey'] = "A. {} B. {} C. {} D. {}".format(row['opa'], row['opb'], row['opc'], row['opd'])
+        row["prompt"] = format_mcq(row['question'], row["optionsKey"])
         answer = int(row['cop'])
-        row['answerKey'] = chr(ord('A')+answer) if answer in [0, 1, 2, 3] else None
+        row['gold'] = chr(ord('A')+answer) if answer in [0, 1, 2, 3] else None
         return row
 
 
@@ -464,15 +466,16 @@ class Medqa4(Benchmark):
     def custom_preprocessing(row):
 
         row['optionsKey'] = "A. {} B. {} C. {} D. {}".format(row['options']["A"], row['options']["B"], row['options']["C"], row['options']["D"])
-        row['answerKey'] = row['answer_idx']
+        row["prompt"] = format_mcq(row['question'], row["optionsKey"])
+        row['gold'] = row['answer_idx']
 
         return row
 
 
 class MedicationQA(Benchmark):
     '''
-    MedicationQA is a benchmark to measure whether a language model is truthful in generating answers to questions
-    Huggingface card: https://huggingface.co/datasets/truthful_qa
+    MedicationQA is a dataset of consumer health questions about medications.
+    Huggingface card: https://huggingface.co/datasets/truehealth/medicationqa
     '''
     def __init__(self, name='medicationqa') -> None:
         super().__init__(name)
@@ -494,8 +497,8 @@ class MedicationQA(Benchmark):
 
 class TruthfulQA(Benchmark):
     '''
-    TruthfulQA is a dataset of consumer health questions about medications.
-    Huggingface card: https://huggingface.co/datasets/truehealth/medicationqa
+    TruthfulQA is a benchmark to measure whether a language model is truthful in generating answers to questions
+    Huggingface card: https://huggingface.co/datasets/truthful_qa
     '''
     def __init__(self, name='truthfulqa') -> None:
         super().__init__(name)
@@ -639,6 +642,8 @@ class ARC(Benchmark):
     @staticmethod
     def custom_preprocessing(row):
         row["optionsKey"] = ' '.join(["{}. {}".format(label, text) for label, text in zip(row["choices"]['label'], row["choices"]['text'])])
+        row["prompt"] = format_mcq(row['question'], row["optionsKey"])
+        row["gold"] = row["answerKey"]
         return row
 
 
@@ -654,6 +659,13 @@ class HellaSwag(Benchmark):
         self.path = os.path.join(ROOT_DIR, 'benchmarks', 'datasets', self.dir_name)
         self.splits = ['train', 'validation', 'test']
 
+    @staticmethod
+    def custom_preprocessing(row):
+        row['question'] = row['ctx']
+        row['options'] = "A. {} B. {} C. {} D. {}".format(row['endings'][0], row['endings'][1], row['endings'][2], row['endings'][3])
+        row['prompt'] = format_mcq(row['question'], row['options'])
+        answer = row['label']
+        row['gold'] = chr(ord('A')+answer) if answer in [0, 1, 2, 3] else None
 
 class Winogrande(Benchmark):
 
@@ -665,12 +677,16 @@ class Winogrande(Benchmark):
         self.hub_name = 'winogrande'
         self.dir_name = 'winogrande'
         self.path = os.path.join(ROOT_DIR, 'benchmarks', 'datasets', self.dir_name)
-        self.splits = ['train', 'validation', 'test']
+        self.splits = ['train', 'validation']
         self.subsets = ["winogrande_debiased"]
 
     @staticmethod
     def custom_preprocessing(row):
-        row["options"] = ' '.join(["{}. {}".format(label, text) for label, text in zip(row["choices"]['label'], row["choices"]['text'])])
+        row['question'] = row['sentence']
+        row['options'] = 'A. {} B. {}'.format(row['option1'], row['option2'])
+        row['prompt'] = format_mcq(row['question'], row['options'])
+        answer = row['answer']
+        row['gold'] = chr(ord('A')+answer) if answer in [1, 2] else None
         return row
 
 
@@ -696,7 +712,7 @@ def format_mcq(question, options):
     if not question.endswith('?') and not question.endswith('.'):
         question += '?'
     options_str = '\n'.join([f"{chr(65+i)}. {options[i]}" for i in range(len(options))])
-    prompt = 'Question: ' + question + '\n\nOptions:\n' + options_str
+    prompt = 'Question: ' + question + '\n\nOptions:\n' + options
     return prompt
 
 
