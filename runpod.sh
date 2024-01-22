@@ -120,8 +120,181 @@ elif [ "$BENCHMARK" == "openllm" ]; then
     echo "Elapsed Time: $(($end-$start)) seconds"
     
     python ../llm-autoeval/main.py . $(($end-$start))
+elif [ "$BENCHMARK" == "medical" ]; then
+
+    git clone "github repo link"
+    cd lm-evaluation-harness
+    pip install -e ".[vllm,promptsource]"
+    pip install langdetect immutabledict
+
+    benchmark="medmcqa"
+    lm_eval --model vllm \
+        --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
+        --tasks medmcqa\
+        --num_fewshot 25 \
+        --batch_size auto \
+        --output_path ./${benchmark}.json
+    
+    benchmark="pubmedqa"
+    lm_eval --model vllm \
+        --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
+        --tasks pubmedqa\
+        --num_fewshot 25 \
+        --batch_size auto \
+        --output_path ./${benchmark}.json
+
+    benchmark="medqa"
+    lm_eval --model vllm \
+        --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
+        --tasks medqa\
+        --num_fewshot 25 \
+        --batch_size auto \
+        --output_path ./${benchmark}.json
+    
+    benchmark="medqa4"
+    lm_eval --model vllm \
+        --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
+        --tasks medqa4\
+        --num_fewshot 25 \
+        --batch_size auto \
+        --output_path ./${benchmark}.json
+
+    benchmark="medicationqa"
+    lm_eval --model vllm \
+        --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
+        --tasks medicationqa\
+        --num_fewshot 25 \
+        --batch_size auto \
+        --output_path ./${benchmark}.json
+
+    benchmark="mmlu_medical"
+    lm_eval --model vllm \
+        --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
+        --tasks mmlu_medical\
+        --num_fewshot 25 \
+        --batch_size auto \
+        --output_path ./${benchmark}.json
+
+    benchmark="mmlu_general"
+    lm_eval --model vllm \
+        --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
+        --tasks mmlu_general\
+        --num_fewshot 25 \
+        --batch_size auto \
+        --output_path ./${benchmark}.json
+
+    benchmark="truthfulqa"
+    lm_eval --model vllm \
+        --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
+        --tasks truthfulqa\
+        --num_fewshot 25 \
+        --batch_size auto \
+        --output_path ./${benchmark}.json
+
+elif [ "$BENCHMARK" == "medical-openllm" ]; then
+
+    git clone "github repo link"
+    cd lm-evaluation-harness
+    pip install -e ".[vllm,promptsource]"
+    pip install langdetect immutabledict
+
+    benchmark="medmcqa"
+    lm_eval --model vllm \
+        --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
+        --tasks medmcqa\
+        --num_fewshot 25 \
+        --batch_size auto \
+        --output_path ./${benchmark}.json
+    
+    benchmark="pubmedqa"
+    lm_eval --model vllm \
+        --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
+        --tasks pubmedqa\
+        --num_fewshot 25 \
+        --batch_size auto \
+        --output_path ./${benchmark}.json
+
+    benchmark="medqa"
+    lm_eval --model vllm \
+        --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
+        --tasks medqa\
+        --num_fewshot 25 \
+        --batch_size auto \
+        --output_path ./${benchmark}.json
+    
+    benchmark="medqa4"
+    lm_eval --model vllm \
+        --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
+        --tasks medqa4\
+        --num_fewshot 25 \
+        --batch_size auto \
+        --output_path ./${benchmark}.json
+
+    benchmark="medicationqa"
+    lm_eval --model vllm \
+        --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
+        --tasks medicationqa\
+        --num_fewshot 25 \
+        --batch_size auto \
+        --output_path ./${benchmark}.json
+
+    benchmark="mmlu_medical"
+    lm_eval --model vllm \
+        --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
+        --tasks mmlu_medical\
+        --num_fewshot 25 \
+        --batch_size auto \
+        --output_path ./${benchmark}.json
+
+    benchmark="mmlu_general"
+    lm_eval --model vllm \
+        --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
+        --tasks mmlu_general\
+        --num_fewshot 25 \
+        --batch_size auto \
+        --output_path ./${benchmark}.json
+
+    benchmark="truthfulqa"
+    lm_eval --model vllm \
+        --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
+        --tasks truthfulqa\
+        --num_fewshot 25 \
+        --batch_size auto \
+        --output_path ./${benchmark}.json
+
+    benchmark="winogrande"
+    lm_eval --model vllm \
+        --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
+        --tasks winogrande \
+        --num_fewshot 5 \
+        --batch_size auto \
+        --output_path ./${benchmark}.json
+    
+    benchmark="gsm8k"
+    lm_eval --model vllm \
+        --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
+        --tasks gsm8k \
+        --num_fewshot 5 \
+        --batch_size auto \
+        --output_path ./${benchmark}.json
+
+    benchmark="arc"
+    lm_eval --model vllm \
+        --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
+        --tasks arc_challenge \
+        --num_fewshot 25 \
+        --batch_size auto \
+        --output_path ./${benchmark}.json
+
+    benchmark="hellaswag"
+    lm_eval --model vllm \
+        --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
+        --tasks hellaswag \
+        --num_fewshot 10 \
+        --batch_size auto \
+        --output_path ./${benchmark}.json
 else
-    echo "Error: Invalid BENCHMARK value. Please set BENCHMARK to 'nous' or 'openllm'."
+    echo "Error: Invalid BENCHMARK value. Please set BENCHMARK to 'nous' or 'openllm' or "medical" or "medical-openllm."
 fi
 
 if [ "$DEBUG" == "False" ]; then
