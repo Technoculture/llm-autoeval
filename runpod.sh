@@ -9,6 +9,8 @@ screen
 
 # Install common libraries
 pip install -q requests accelerate sentencepiece pytablewriter einops protobuf
+# Hugging Face login
+huggingface-cli login --token $HF_TOKEN
 
 if [ "$DEBUG" == "True" ]; then
     echo "Launch LLM AutoEval in debug mode"
@@ -122,7 +124,7 @@ elif [ "$BENCHMARK" == "openllm" ]; then
     python ../llm-autoeval/main.py . $(($end-$start))
 elif [ "$BENCHMARK" == "medical" ]; then
 
-    git clone "github repo link"
+    git clone https://github.com/EleutherAI/lm-evaluation-harness
     cd lm-evaluation-harness
     pip install -e ".[vllm,promptsource]"
     pip install langdetect immutabledict
@@ -131,7 +133,7 @@ elif [ "$BENCHMARK" == "medical" ]; then
     lm_eval --model vllm \
         --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
         --tasks medmcqa\
-        --num_fewshot 25 \
+        --num_fewshot 3 \
         --batch_size auto \
         --output_path ./${benchmark}.json
     
@@ -139,61 +141,74 @@ elif [ "$BENCHMARK" == "medical" ]; then
     lm_eval --model vllm \
         --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
         --tasks pubmedqa\
-        --num_fewshot 25 \
+        --num_fewshot 3 \
         --batch_size auto \
         --output_path ./${benchmark}.json
 
-    benchmark="medqa"
+    benchmark="medqa_4options"
     lm_eval --model vllm \
         --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
-        --tasks medqa\
-        --num_fewshot 25 \
+        --tasks medqa_4options\
+        --num_fewshot 3 \
         --batch_size auto \
         --output_path ./${benchmark}.json
     
-    benchmark="medqa4"
+    benchmark="mmlu_medical_genetics"
     lm_eval --model vllm \
         --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
-        --tasks medqa4\
-        --num_fewshot 25 \
+        --tasks mmlu_medical_genetics\
+        --num_fewshot 5 \
         --batch_size auto \
         --output_path ./${benchmark}.json
 
-    benchmark="medicationqa"
+    benchmark="mmlu_anatomy"
     lm_eval --model vllm \
         --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
-        --tasks medicationqa\
-        --num_fewshot 25 \
+        --tasks mmlu_anatomy\
+        --num_fewshot 5 \
         --batch_size auto \
         --output_path ./${benchmark}.json
 
-    benchmark="mmlu_medical"
+    benchmark="mmlu_clinical_knowledge"
     lm_eval --model vllm \
         --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
-        --tasks mmlu_medical\
-        --num_fewshot 25 \
+        --tasks mmlu_clinical_knowledge\
+        --num_fewshot 5 \
         --batch_size auto \
         --output_path ./${benchmark}.json
 
-    benchmark="mmlu_general"
+    benchmark="mmlu_college_medicine"
     lm_eval --model vllm \
         --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
-        --tasks mmlu_general\
-        --num_fewshot 25 \
+        --tasks mmlu_college_medicine\
+        --num_fewshot 5 \
         --batch_size auto \
         --output_path ./${benchmark}.json
 
-    benchmark="truthfulqa"
+    benchmark="mmlu_professional_medicine"
     lm_eval --model vllm \
         --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
-        --tasks truthfulqa\
-        --num_fewshot 25 \
+        --tasks mmlu_professional_medicine\
+        --num_fewshot 5 \
         --batch_size auto \
         --output_path ./${benchmark}.json
+
+    benchmark="mmlu_college_biology"
+    lm_eval --model vllm \
+        --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
+        --tasks mmlu_professional_medicine\
+        --num_fewshot 5 \
+        --batch_size auto \
+        --output_path ./${benchmark}.json
+
+    end=$(date +%s)
+    echo "Elapsed Time: $(($end-$start)) seconds"
+    
+    python ../llm-autoeval/main.py . $(($end-$start))
 
 elif [ "$BENCHMARK" == "medical-openllm" ]; then
 
-    git clone "github repo link"
+    git clone https://github.com/EleutherAI/lm-evaluation-harness
     cd lm-evaluation-harness
     pip install -e ".[vllm,promptsource]"
     pip install langdetect immutabledict
@@ -202,7 +217,7 @@ elif [ "$BENCHMARK" == "medical-openllm" ]; then
     lm_eval --model vllm \
         --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
         --tasks medmcqa\
-        --num_fewshot 25 \
+        --num_fewshot 3 \
         --batch_size auto \
         --output_path ./${benchmark}.json
     
@@ -210,47 +225,63 @@ elif [ "$BENCHMARK" == "medical-openllm" ]; then
     lm_eval --model vllm \
         --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
         --tasks pubmedqa\
-        --num_fewshot 25 \
+        --num_fewshot 3 \
         --batch_size auto \
         --output_path ./${benchmark}.json
 
-    benchmark="medqa"
+    benchmark="medqa_4options"
     lm_eval --model vllm \
         --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
-        --tasks medqa\
-        --num_fewshot 25 \
+        --tasks medqa_4options\
+        --num_fewshot 3 \
         --batch_size auto \
         --output_path ./${benchmark}.json
     
-    benchmark="medqa4"
+    benchmark="mmlu_medical_genetics"
     lm_eval --model vllm \
         --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
-        --tasks medqa4\
-        --num_fewshot 25 \
+        --tasks mmlu_medical_genetics\
+        --num_fewshot 5 \
         --batch_size auto \
         --output_path ./${benchmark}.json
 
-    benchmark="medicationqa"
+    benchmark="mmlu_anatomy"
     lm_eval --model vllm \
         --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
-        --tasks medicationqa\
-        --num_fewshot 25 \
+        --tasks mmlu_anatomy\
+        --num_fewshot 5 \
         --batch_size auto \
         --output_path ./${benchmark}.json
 
-    benchmark="mmlu_medical"
+    benchmark="mmlu_clinical_knowledge"
     lm_eval --model vllm \
         --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
-        --tasks mmlu_medical\
-        --num_fewshot 25 \
+        --tasks mmlu_clinical_knowledge\
+        --num_fewshot 5 \
         --batch_size auto \
         --output_path ./${benchmark}.json
 
-    benchmark="mmlu_general"
+    benchmark="mmlu_college_medicine"
     lm_eval --model vllm \
         --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
-        --tasks mmlu_general\
-        --num_fewshot 25 \
+        --tasks mmlu_college_medicine\
+        --num_fewshot 5 \
+        --batch_size auto \
+        --output_path ./${benchmark}.json
+
+    benchmark="mmlu_professional_medicine"
+    lm_eval --model vllm \
+        --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
+        --tasks mmlu_professional_medicine\
+        --num_fewshot 5 \
+        --batch_size auto \
+        --output_path ./${benchmark}.json
+
+    benchmark="mmlu_college_biology"
+    lm_eval --model vllm \
+        --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
+        --tasks mmlu_professional_medicine\
+        --num_fewshot 5 \
         --batch_size auto \
         --output_path ./${benchmark}.json
 
@@ -293,6 +324,12 @@ elif [ "$BENCHMARK" == "medical-openllm" ]; then
         --num_fewshot 10 \
         --batch_size auto \
         --output_path ./${benchmark}.json
+
+    end=$(date +%s)
+    echo "Elapsed Time: $(($end-$start)) seconds"
+    
+    python ../llm-autoeval/main.py . $(($end-$start))
+    
 else
     echo "Error: Invalid BENCHMARK value. Please set BENCHMARK to 'nous' or 'openllm' or "medical" or "medical-openllm."
 fi
