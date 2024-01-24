@@ -637,7 +637,7 @@ class ARC(Benchmark):
         self.dir_name = 'ai2_arc'
         self.path = os.path.join(ROOT_DIR, 'benchmarks', 'datasets', self.dir_name)
         self.splits = ['train', 'validation', 'test']
-        self.subsets = ['ARC-Easy']
+        self.subsets = ['ARC-Challenge']
 
     @staticmethod
     def custom_preprocessing(row):
@@ -712,7 +712,7 @@ def format_mcq(question, options):
     if not question.endswith('?') and not question.endswith('.'):
         question += '?'
     options_str = '\n'.join([f"{chr(65+i)}. {options[i]}" for i in range(len(options))])
-    prompt = 'Question: ' + question + '\n\nOptions:\n' + options
+    prompt = 'Question: ' + question + '\n\nOptions:\n' + options_str
     return prompt
 
 

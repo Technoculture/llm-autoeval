@@ -70,7 +70,7 @@ def benchmark_preparation(benchmark_obj, args):
             logging.info(f'FEW SHOTS: {args.shots}')
             benchmark_obj.add_few_shot(
                     shots=args.shots)
-            
+# for arc (phi-2)           
 def format_answer(predictions):
     pred = []
     for prediction in tqdm(predictions, desc="Formatting Answers", unit="prediction"):
@@ -81,17 +81,34 @@ def format_answer(predictions):
             pred.append(None)
     return pred
 
+# for truthfulqa (phi-2) 
+def format_answer(predictions):
+    pred = []
+    for prediction in tqdm(predictions, desc="Formatting Answers", unit="prediction"):
+        matches_option = re.findall(r'The correct option is (\w)', prediction)
+        if matches_option:
+            pred.append(matches_option[0])
+        else:
+            matches_answer = re.findall(r'The correct answer is (\w)', prediction)
+            if matches_answer:
+                pred.append(matches_answer[0])
+            else:
+                pred.append("None")
+    
+    return pred
+
 def evaluate_model(benchmark_instance, model):
 
-    predictions = answer_prompt(benchmark_instance.test_data["prompt"][:1], model)
+    predictions = answer_prompt(benchmark_instance.test_data["prompt"], model)
     print(predictions)
     if args.model == "microsoft./phi-2":
         predictions = format_answer(predictions)
 
     print(predictions)
-    evaluate_predictions(predictions, benchmark_instance.test_data["gold"][:1])
+    evaluate_predictions(predictions, benchmark_instance.test_data["gold"])
 
 def evaluate_predictions(pred, ref):
+
 
     correct = sum(1 for pred_letter, truth in zip(pred, ref) if pred_letter[0] == truth)
     total = len(ref)
@@ -100,17 +117,18 @@ def evaluate_predictions(pred, ref):
 
 def main(args):
 
-    if args.model == "gpt-3.5-turbo" or args.model == "gpt-4":
-        model = model_setting(args.model, args.api_key)
-    else:
-        model = hfmodel_setting(args.model)
+    # if args.model == "gpt-3.5-turbo" or args.model == "gpt-4":
+    #     model = model_setting(args.model, args.api_key)
+    # else:
+    #     model = hfmodel_setting(args.model)
 
     #Creating a benchmark instance, loading data and processing.
     benchmark_instance = benchmark_factory(args.benchmark)
     benchmark_preparation(benchmark_instance, args)
-    
+    print(benchmark_instance.test_data["prompt"])
+    #print(benchmark_instance.test_data["gold"])
     #Evaluating
-    evaluate_model(benchmark_instance, model)
+    # evaluate_model(benchmark_instance, model)
 
 
 if __name__ == "__main__":
@@ -119,6 +137,6 @@ if __name__ == "__main__":
     parser.add_argument("--model", type= str, default="gpt-3.5-turbo", help="Model to be used.")
     parser.add_argument("--api_key", type=str, help="YOUR_API_KEY")
     parser.add_argument("--benchmark", type=str, help = "Choose one of the following benchmark: [medmcqa, medicationqa, mmlu_medical, mmlu_general, arc, hellaswag, winogrande, blurb, truthfulqa, gsm8k].", default="arc")
-    parser.add_argument("--shots", type=int, help = "Number of few shots.", default=25)
+    parser.add_argument("--shots", type=int, help = "Number of few shots.", default=0)
     args = parser.parse_args()
     main(args)
