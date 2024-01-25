@@ -4,7 +4,11 @@ import dspy
 from benchmark import benchmark_factory
 import logging
 import re
+import random
 from tqdm import tqdm
+from dspy.teleprompt import KNNFewShot
+from dspy.predict.knn import KNN
+from dspy.teleprompt.teleprompt import Teleprompter
 
 def model_setting(model_name, API_KEY):
 
@@ -40,6 +44,66 @@ class MultipleQABot(dspy.Module):
         answer = self.generate_answer(question=question,options=options)
 
         return answer
+    
+# Chain of thought.
+# class COT(dspy.Module):
+#     def __init__(self):
+#         super().__init__()
+#         self.generate_answer = dspy.ChainOfThought(MultipleChoiceQA)
+
+#     def forward(self, question, options):
+#         answer = self.generate_answer(question=question,options=options)
+
+#         return answer
+    # cot = COT()    
+    
+# class Ensemble(Teleprompter):
+#     def __init__(self, *, reduce_fn=None, size=None, deterministic=False):
+#         """A common reduce_fn is dspy.majority."""
+
+#         assert deterministic is False, "TODO: Implement example hashing for deterministic ensemble."
+
+#         self.reduce_fn = reduce_fn
+#         self.size = size
+#         self.deterministic = deterministic
+
+#     def compile(self, programs):
+#         size = self.size
+#         reduce_fn = self.reduce_fn
+
+#         class EnsembledProgram(dspy.Module):
+#             def __init__(self):
+#                 super().__init__()
+#                 self.programs = programs
+
+#             def forward(self, *args, **kwargs):
+#                 programs = random.sample(self.programs, size) if size else self.programs
+#                 outputs = [prog(*args, **kwargs) for prog in programs]
+
+#                 if reduce_fn:
+#                     return reduce_fn(outputs)
+
+#                 return outputs
+
+#         return EnsembledProgram()
+
+# Chain of thought generation
+# generate_answer = dspy.ChainOfThought(MultipleChoiceQA)
+# def store_correct_cot(questions: list[str], option_sets: list[str], answers: list[str]) -> list[str]:
+#     train_set = []
+#     for question, options, answer in zip(questions, option_sets, answers):
+#         pred_response = generate_answer(question=question, options=options)
+#         if pred_response.answer == answer:
+#           example = dspy.Example(
+#             question=question,
+#             options=options,
+#             context=pred_response.rationale.split('.', 1)[1].strip(),
+#             answer=answer
+#         ).with_inputs("question", "options")
+
+#           train_set.append(example)
+
+#     return train_set
 
 generate_answer = MultipleQABot()
 def generate_responses(questions, option_sets):
