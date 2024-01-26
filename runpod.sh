@@ -331,7 +331,7 @@ elif [ "$BENCHMARK" == "medical-openllm" ]; then
     python ../llm-autoeval/main.py . $(($end-$start))
     
 else
-    echo "Error: Invalid BENCHMARK value. Please set BENCHMARK to 'nous' or 'openllm' or "medical" or "medical-openllm."
+    echo "Error: Invalid BENCHMARK value. Please set BENCHMARK to 'nous' or 'openllm' or 'medical' or 'medical-openllm'."
 fi
 
 if [ "$DEBUG" == "False" ]; then
