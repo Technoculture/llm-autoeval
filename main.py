@@ -25,6 +25,10 @@ def main(directory: str, elapsed_time: float) -> None:
         tasks = ["ARC", "HellaSwag", "MMLU", "TruthfulQA", "Winogrande", "GSM8K"]
     elif BENCHMARK == "nous":
         tasks = ["AGIEval", "GPT4All", "TruthfulQA", "Bigbench"]
+    elif BENCHMARK == "medical":
+        tasks = ["MedMCQA","PubmedQA", "MedQA_4options", "MMLU_Medical_Genetics", "MMLU_Anatomy", "MMLU_Clinical_Knowledge", "MMLU_College_Medicine", "MMLU_Professional_Medicine", "MMLU_College_Biology"]
+    elif BENCHMARK == "medical-openllm":
+        tasks = ["MedMCQA","PubmedQA", "MedQA_4options", "MMLU_Medical_Genetics", "MMLU_Anatomy", "MMLU_Clinical_Knowledge", "MMLU_College_Medicine", "MMLU_Professional_Medicine", "MMLU_College_Biology", "TruthfulQA", "Winogrande", "GSM8K", "ARC", "HellaSwag"]
     else:
         raise NotImplementedError(f"BENCHMARK should be 'openllm' or 'nous' (current value = {BENCHMARK})")
 
