@@ -280,7 +280,7 @@ elif [ "$BENCHMARK" == "medical-openllm" ]; then
     benchmark="mmlu_college_biology"
     lm_eval --model vllm \
         --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
-        --tasks mmlu_professional_medicine\
+        --tasks mmlu_college_biology\
         --num_fewshot 5 \
         --batch_size auto \
         --output_path ./${benchmark}.json

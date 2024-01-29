@@ -53,6 +53,26 @@ def calculate_average(data, task):
         elif task == "truthfulqa":
             value = data["results"]["truthfulqa_mc"]["mc2"]
             return 0.0 if math.isnan(value) else value * 100
+    
+    elif BENCHMARK == "medical":
+        if task == "medmcqa":
+            return data["results"]["medmcqa"]["acc_norm,none"] * 100
+        elif task == "pubmedqa":
+            return data["results"]["pubmedqa"]["acc,none"] * 100
+        elif task == "medqa_4options":
+            return data["results"]["medqa_4options"]["acc_norm,none"] * 100
+        elif task == "mmlu_medical_genetics":
+            return data["results"]["mmlu_medical_genetics"]["acc,none"] * 100
+        elif task == "mmlu_anatomy":
+            return data["results"]["mmlu_anatomy"]["acc,none"] * 100
+        elif task == "mmlu_clinical_knowledge":
+            return data["results"]["mmlu_clinical_knowledge"]["acc,none"] * 100
+        elif task == "mmlu_college_medicine":
+            return data["results"]["mmlu_college_medicine"]["acc,none"] * 100
+        elif task == "mmlu_professional_medicine":
+            return data["results"]["mmlu_professional_medicine"]["acc,none"] * 100
+        elif task == "mmlu_college_biology":
+            return data["results"]["mmlu_college_biology"]["acc,none"] * 100
 
     raise NotImplementedError(f"Could not find task {task} for benchmark {BENCHMARK}")
 
