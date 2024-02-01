@@ -210,7 +210,8 @@ elif [ "$BENCHMARK" == "medical-openllm" ]; then
 
     git clone https://github.com/EleutherAI/lm-evaluation-harness
     cd lm-evaluation-harness
-    pip install -e ".[vllm,promptsource]"
+    # pip install -e ".[vllm,promptsource]"
+    pip install -e ".[vllm]"
     pip install langdetect immutabledict
 
     benchmark="medmcqa"
