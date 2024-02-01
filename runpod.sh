@@ -61,7 +61,7 @@ if [ "$BENCHMARK" == "nous" ]; then
     end=$(date +%s)
     echo "Elapsed Time: $(($end-$start)) seconds"
     
-    python ../main.py . $(($end-$start))
+    python ../med-llm-autoeval/main.py . $(($end-$start))
 
 elif [ "$BENCHMARK" == "openllm" ]; then
     git clone https://github.com/EleutherAI/lm-evaluation-harness
@@ -121,7 +121,7 @@ elif [ "$BENCHMARK" == "openllm" ]; then
     end=$(date +%s)
     echo "Elapsed Time: $(($end-$start)) seconds"
     
-    python ../main.py . $(($end-$start))
+    python ../med-llm-autoeval/main.py . $(($end-$start))
 elif [ "$BENCHMARK" == "medical" ]; then
 
     git clone https://github.com/EleutherAI/lm-evaluation-harness
@@ -204,7 +204,7 @@ elif [ "$BENCHMARK" == "medical" ]; then
     end=$(date +%s)
     echo "Elapsed Time: $(($end-$start)) seconds"
     
-    python ../main.py . $(($end-$start))
+    python ../med-llm-autoeval/main.py . $(($end-$start))
 
 elif [ "$BENCHMARK" == "medical-openllm" ]; then
 
@@ -328,7 +328,7 @@ elif [ "$BENCHMARK" == "medical-openllm" ]; then
     end=$(date +%s)
     echo "Elapsed Time: $(($end-$start)) seconds"
     
-    python ../main.py . $(($end-$start))
+    python ../med-llm-autoeval/main.py . $(($end-$start))
     
 else
     echo "Error: Invalid BENCHMARK value. Please set BENCHMARK to 'nous' or 'openllm' or 'medical' or 'medical-openllm'."
