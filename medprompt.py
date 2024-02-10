@@ -3,7 +3,7 @@ from datasets import DatasetDict, load_dataset
 import dspy
 import openai
 import faiss
-import tqdm
+from tqdm import tqdm
 import random
 from dspy.teleprompt import KNNFewShot
 from dspy.predict.knn import KNN
@@ -60,13 +60,15 @@ class MultipleChoiceQA1(dspy.Signature):
 generate_answer = dspy.ChainOfThought(MultipleChoiceQA)
 def store_correct_cot(questions: list[str], option_sets: list[str], answers: list[str]) -> list[str]:
     train_set = []
-    for question, options, answer in zip(questions, option_sets, answers):
+    for question, options, answer in tqdm(zip(questions, option_sets, answers),desc="Generating COTs", unit="cot"):
         pred_response = generate_answer(question=question, options=options)
-        if pred_response.answer == answer:
+        if pred_response.answer[0] == answer:
           example = dspy.Example(
             question=question,
             options=options,
-            context=pred_response.rationale.split('.', 1)[1].strip(),
+            # Commented out for evaluate_medprompt
+            # context=pred_response.rationale.split('.', 1)[1].strip(),
+            context=pred_response.rationale,
             answer=answer
         ).with_inputs("question", "options")
 
