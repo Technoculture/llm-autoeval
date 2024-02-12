@@ -1,6 +1,6 @@
 import argparse
-from test import test
-from med import MedpromptModule
+from benchmark import test
+from medprompt import MedpromptModule
 
 
 if __name__ == "__main__":
@@ -20,6 +20,3 @@ if __name__ == "__main__":
     benchmark="arc",
     shots=5,
     )
-
-    print(results)
-
