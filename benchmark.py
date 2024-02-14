@@ -768,12 +768,12 @@ def evaluate_model(dspy_module, benchmark_instance):
     # Generate the training set
     trainset = dspy_module.store_correct_cot(benchmark_instance.train_data["question"], benchmark_instance.train_data["optionsKey"], benchmark_instance.train_data["gold"])
     # Initialize MedpromptModule with trainset and shots
-    medprompt_module = dspy_module(trainset=trainset, shots=5)
+    module = dspy_module(trainset=trainset, shots=5)
 
     predictions = []
     # Generating predictions
     for question, options in tqdm(zip(benchmark_instance.test_data["prompt"], benchmark_instance.test_data["optionsKey"]), desc="Generating Responses", unit="prompt"):
-        response = medprompt_module(question, options)
+        response = module(question, options)
         predictions.append(response)
 
     evaluate_predictions(predictions, benchmark_instance.test_data["gold"])
