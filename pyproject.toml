@@ -20,6 +20,3 @@ ruff = "^0.2.1"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-
-[tool.ruff]
-linters = ["flake8"]
