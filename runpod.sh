@@ -61,7 +61,7 @@ if [ "$BENCHMARK" == "nous" ]; then
     end=$(date +%s)
     echo "Elapsed Time: $(($end-$start)) seconds"
     
-    python ../llm-autoeval/main.py . $(($end-$start))
+    python ../med-llm-autoeval/main.py . $(($end-$start))
 
 elif [ "$BENCHMARK" == "openllm" ]; then
     git clone https://github.com/EleutherAI/lm-evaluation-harness
@@ -121,7 +121,7 @@ elif [ "$BENCHMARK" == "openllm" ]; then
     end=$(date +%s)
     echo "Elapsed Time: $(($end-$start)) seconds"
     
-    python ../llm-autoeval/main.py . $(($end-$start))
+    python ../med-llm-autoeval/main.py . $(($end-$start))
 elif [ "$BENCHMARK" == "medical" ]; then
 
     git clone https://github.com/EleutherAI/lm-evaluation-harness
@@ -196,7 +196,7 @@ elif [ "$BENCHMARK" == "medical" ]; then
     benchmark="mmlu_college_biology"
     lm_eval --model vllm \
         --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
-        --tasks mmlu_professional_medicine\
+        --tasks mmlu_college_biology\
         --num_fewshot 5 \
         --batch_size auto \
         --output_path ./${benchmark}.json
@@ -204,13 +204,14 @@ elif [ "$BENCHMARK" == "medical" ]; then
     end=$(date +%s)
     echo "Elapsed Time: $(($end-$start)) seconds"
     
-    python ../llm-autoeval/main.py . $(($end-$start))
+    python ../med-llm-autoeval/main.py . $(($end-$start))
 
 elif [ "$BENCHMARK" == "medical-openllm" ]; then
 
     git clone https://github.com/EleutherAI/lm-evaluation-harness
     cd lm-evaluation-harness
-    pip install -e ".[vllm,promptsource]"
+    # pip install -e ".[vllm,promptsource]"
+    pip install -e ".[vllm]"
     pip install langdetect immutabledict
 
     benchmark="medmcqa"
@@ -280,7 +281,7 @@ elif [ "$BENCHMARK" == "medical-openllm" ]; then
     benchmark="mmlu_college_biology"
     lm_eval --model vllm \
         --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
-        --tasks mmlu_professional_medicine\
+        --tasks mmlu_college_biology\
         --num_fewshot 5 \
         --batch_size auto \
         --output_path ./${benchmark}.json
@@ -328,10 +329,10 @@ elif [ "$BENCHMARK" == "medical-openllm" ]; then
     end=$(date +%s)
     echo "Elapsed Time: $(($end-$start)) seconds"
     
-    python ../llm-autoeval/main.py . $(($end-$start))
+    python ../med-llm-autoeval/main.py . $(($end-$start))
     
 else
-    echo "Error: Invalid BENCHMARK value. Please set BENCHMARK to 'nous' or 'openllm' or "medical" or "medical-openllm."
+    echo "Error: Invalid BENCHMARK value. Please set BENCHMARK to 'nous' or 'openllm' or 'medical' or 'medical-openllm'."
 fi
 
 if [ "$DEBUG" == "False" ]; then
