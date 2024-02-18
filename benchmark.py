@@ -659,6 +659,14 @@ class MMLU(Benchmark):
     @staticmethod
     def custom_preprocessing(row):
         options = [row["A"], row["B"], row["C"], row["D"]]
+        row["optionsKey"] = " ".join(
+            [
+                "{}. {}".format(label, text)
+                for label, text in zip(
+                    ["A", "B", "C", "D"], [row["A"], row["B"], row["C"], row["D"]]
+                )
+            ]
+        )
         row["prompt"] = format_mcq(row["input"], options)
         row["gold"] = row["target"]
         row["subset"] = row["subset"]
@@ -862,6 +870,21 @@ def hfmodel_setting(model_name):
     return model
 
 
+def together_setting(model_name, API_KEY):
+    model = dspy.Together(model=model_name, api_key=API_KEY)
+    dspy.settings.configure(lm=model)
+    return model
+
+
+def answer_prompt(prompts, model):
+    responses = []
+    for prompt in tqdm(prompts, desc="Generating Responses", unit="prompt"):
+        pred_response = model(prompt)
+        generated_response = pred_response[0]
+        responses.append(generated_response)
+    return responses
+
+
 def benchmark_preparation(benchmark_obj, dspy_module, shots):
     for partition in benchmark_obj.splits:
         benchmark_obj.load_data(partition=partition)
@@ -874,34 +897,39 @@ def benchmark_preparation(benchmark_obj, dspy_module, shots):
         benchmark_obj.add_few_shot(shots=shots)
 
 
-def evaluate_model(dspy_module, benchmark_instance):
+def evaluate_model(dspy_module, benchmark_instance, model):
     try:
         # Generate the training set
         trainset = dspy_module.store_correct_cot(
-            benchmark_instance.train_data["question"],
-            benchmark_instance.train_data["optionsKey"],
+            benchmark_instance.train_data["input"]
+            if "input" in benchmark_instance.train_data.column_names
+            else benchmark_instance.train_data["question"],
+            benchmark_instance.train_data["optionsKey"]
+            if "optionsKey" in benchmark_instance.train_data.column_names
+            else benchmark_instance.train_data["options"],
             benchmark_instance.train_data["gold"],
         )
         # Initialize MedpromptModule with trainset and shots
         module = dspy_module(trainset=trainset, shots=5)
+        predictions = []
+        # Generating predictions
+        for question, options in tqdm(
+            zip(
+                benchmark_instance.test_data["prompt"][:100],
+                benchmark_instance.test_data["optionsKey"][:100]
+                if "optionsKey" in benchmark_instance.test_data.column_names
+                else benchmark_instance.test_data["options"][:100],
+            ),
+            desc="Generating Responses",
+            unit="prompt",
+        ):
+            response = module(question, options)
+            predictions.append(response)
     except Exception as e:
-        # Handle the error gracefully
         print(f"An error occurred while instantiating the module: {e}")
+        predictions = answer_prompt(benchmark_instance.test_data["prompt"][:100], model)
 
-    predictions = []
-    # Generating predictions
-    for question, options in tqdm(
-        zip(
-            benchmark_instance.test_data["prompt"],
-            benchmark_instance.test_data["optionsKey"],
-        ),
-        desc="Generating Responses",
-        unit="prompt",
-    ):
-        response = module(question, options)
-        predictions.append(response)
-
-    evaluate_predictions(predictions, benchmark_instance.test_data["gold"])
+    evaluate_predictions(predictions, benchmark_instance.test_data["gold"][:100])
 
 
 def evaluate_predictions(pred, ref):
@@ -912,8 +940,10 @@ def evaluate_predictions(pred, ref):
 
 
 def test(model, api_key, dspy_module, benchmark, shots):
-    if model == "gpt-3.5-turbo" or model == "gpt-4":
+    if model in ["gpt-3.5-turbo", "gpt-4-turbo-preview"]:
         model = model_setting(model, api_key)
+    elif len(api_key) > 10:
+        model = together_setting(model, api_key)
     else:
         model = hfmodel_setting(model)
 
@@ -922,4 +952,4 @@ def test(model, api_key, dspy_module, benchmark, shots):
     benchmark_preparation(benchmark_instance, dspy_module, shots)
 
     # Evaluating
-    evaluate_model(dspy_module, benchmark_instance)
+    evaluate_model(dspy_module, benchmark_instance, model)
