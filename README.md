@@ -1,22 +1,15 @@
-# 🧐 LLM AutoEval
-
-<p align="center">
-<a href="https://colab.research.google.com/drive/1Igs3WZuXAIv9X0vwqiE90QlEPys8e8Oa?usp=sharing"><img src="img/colab.svg" alt="Open In Colab"></a></center>
-</p>
-
-<p align="center">
-<img src='img/llmautoeval.png'>
-</p>
+# Med LLM AutoEval
 
 ## Overview
 
-LLM AutoEval **simplifies the process of evaluating LLMs** using a convenient [Colab notebook](https://colab.research.google.com/drive/1Igs3WZuXAIv9X0vwqiE90QlEPys8e8Oa?usp=sharing). This tool is ideal for developers who aim to assess the performance of LLMs quickly and efficiently.
+Med LLM AutoEval **simplifies the process of evaluating LLMs** using a convenient [Colab notebook](https://colab.research.google.com/drive/1Igs3WZuXAIv9X0vwqiE90QlEPys8e8Oa?usp=sharing). This tool is ideal for developers who aim to assess the performance of LLMs quickly and efficiently.
 
 ### Key Features
 
 * Automated setup and execution using [RunPod](https://runpod.io?ref=9nvk2srl).
 * Customizable evaluation parameters for tailored benchmarking.
 * Summary generation and upload to [GitHub Gist](https://gist.github.com/) for easy sharing and reference.
+* Support for arbitrary dspy programs.
 
 [View a sample summary here.](https://gist.github.com/mlabonne/88b21dd9698ffed75d6163ebdc2f6cc8)
 
@@ -29,6 +22,9 @@ LLM AutoEval **simplifies the process of evaluating LLMs** using a convenient [C
 * **Benchmark suite**: 
     * `nous`: List of tasks: AGIEval, GPT4ALL, TruthfulQA, and Bigbench (popularized by [Teknium](https://github.com/teknium1) and [NousResearch](https://github.com/NousResearch)). This is recommended.
     * `openllm`: List of tasks: ARC, HellaSwag, MMLU, Winogrande, GSM8K, and TruthfulQA (like the [Open LLM Leaderboard](https://huggingface.co/spaces/HuggingFaceH4/open_llm_leaderboard)). It uses the [vllm](https://docs.vllm.ai/) implementation to enhance speed (note that the results will not be identical to those obtained without using vllm). "mmlu" is currently missing because of a problem with vllm.
+    * `medical` : List of tasks: MedMCQA, PubmedQA, MedQA_4options, MMLU_Medical_Genetics, MMLU_Anatomy, MMLU_Clinical_Knowledge, MMLU_College_Medicine, MMLU_Professional_Medicine, MMLU_College_Biology
+    * `medical-openllm` : List of tasks: MedMCQA, PubmedQA, MedQA_4options, MMLU_Medical_Genetics, MMLU_Anatomy, MMLU_Clinical_Knowledge, MMLU_College_Medicine, MMLU_Professional_Medicine, MMLU_College_Biology, TruthfulQA, Winogrande, GSM8K, ARC, HellaSwag
+   
 * **Model**: Enter the model id from Hugging Face.
 * **GPU**: Select the GPU you want for evaluation (see prices [here](https://www.runpod.io/console/gpu-cloud)). I recommend using beefy GPUs (RTX 3090 or higher), especially for the Open LLM benchmark suite.
 * **Number of GPUs**: Self-explanatory (not tested).
@@ -53,6 +49,59 @@ You can compare your results with:
 ### Open LLM
 
 You can compare your results with those listed on the [Open LLM Leaderboard](https://huggingface.co/spaces/HuggingFaceH4/open_llm_leaderboard).
+### Medical
+
+### Medical Openllm
+
+## Support for arbitrary dspy programs
+
+### Introduction
+This project aims to provide support for running arbitrary dspy programs with ease. The flexibility is achieved by allowing users to specify different parameters for their dspy program through a simple interface.
+
+### Usage
+To use this feature, follow these steps:
+
+1. Import the necessary modules:
+```
+import argparse
+from benchmark import test
+from medprompt import MedpromptModule
+```
+
+2. Define the parameters for your dspy program using the test function:
+```
+results = test(
+    model="MODEL_NAME",
+    api_key="API_KEY",
+    dspy_module=MedpromptModule,
+    benchmark="arc", # arc used as an example here. You can choose any from the above benchmark suites.
+    shots=5,
+)
+```
+
+3. Execute your script.
+### Example
+
+```
+import argparse
+from benchmark import test
+from medprompt import MedpromptModule
+
+if __name__ == "__main__":
+
+    results = test(
+        model="google/flan-t5-base",
+        api_key="",
+        dspy_module=MedpromptModule,
+        benchmark="arc",
+        shots=5,
+    )
+```
+
+You may also refer to [video](https://www.loom.com/share/6c7e4eed82764d31b4bf4a6a859ac295?sid=d216c56c-aaf3-4734-b73c-1aebf281e3b2) explaining the whole process.
+
+### Conclusion
+This support for arbitrary dspy programs empowers users to seamlessly integrate and evaluate different programs with varying parameters. By running tests with diverse configurations, users can obtain accuracy scores and compare the performance of different programs. This facilitates informed decision-making, allowing users to identify the program that best suits their specific requirements and use cases.
 
 ## Troubleshooting
 

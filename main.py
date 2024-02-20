@@ -26,11 +26,38 @@ def main(directory: str, elapsed_time: float) -> None:
     elif BENCHMARK == "nous":
         tasks = ["AGIEval", "GPT4All", "TruthfulQA", "Bigbench"]
     elif BENCHMARK == "medical":
-        tasks = ["MedMCQA","PubmedQA", "MedQA_4options", "MMLU_Medical_Genetics", "MMLU_Anatomy", "MMLU_Clinical_Knowledge", "MMLU_College_Medicine", "MMLU_Professional_Medicine", "MMLU_College_Biology"]
+        tasks = [
+            "MedMCQA",
+            "PubmedQA",
+            "MedQA_4options",
+            "MMLU_Medical_Genetics",
+            "MMLU_Anatomy",
+            "MMLU_Clinical_Knowledge",
+            "MMLU_College_Medicine",
+            "MMLU_Professional_Medicine",
+            "MMLU_College_Biology",
+        ]
     elif BENCHMARK == "medical-openllm":
-        tasks = ["MedMCQA","PubmedQA", "MedQA_4options", "MMLU_Medical_Genetics", "MMLU_Anatomy", "MMLU_Clinical_Knowledge", "MMLU_College_Medicine", "MMLU_Professional_Medicine", "MMLU_College_Biology", "TruthfulQA", "Winogrande", "GSM8K", "ARC", "HellaSwag"]
+        tasks = [
+            "MedMCQA",
+            "PubmedQA",
+            "MedQA_4options",
+            "MMLU_Medical_Genetics",
+            "MMLU_Anatomy",
+            "MMLU_Clinical_Knowledge",
+            "MMLU_College_Medicine",
+            "MMLU_Professional_Medicine",
+            "MMLU_College_Biology",
+            "TruthfulQA",
+            "Winogrande",
+            "GSM8K",
+            "ARC",
+            "HellaSwag",
+        ]
     else:
-        raise NotImplementedError(f"BENCHMARK should be 'openllm' or 'nous' (current value = {BENCHMARK})")
+        raise NotImplementedError(
+            f"BENCHMARK should be 'openllm' or 'nous' (current value = {BENCHMARK})"
+        )
 
     # Load results
     for task in tasks:
@@ -77,8 +104,14 @@ def main(directory: str, elapsed_time: float) -> None:
 if __name__ == "__main__":
     # Create the parser
     parser = argparse.ArgumentParser(description="Summarize results and upload them.")
-    parser.add_argument("directory", type=str, help="The path to the directory with the JSON results")
-    parser.add_argument("elapsed_time", type=float, help="Elapsed time since the start of the evaluation")
+    parser.add_argument(
+        "directory", type=str, help="The path to the directory with the JSON results"
+    )
+    parser.add_argument(
+        "elapsed_time",
+        type=float,
+        help="Elapsed time since the start of the evaluation",
+    )
 
     # Parse the arguments
     args = parser.parse_args()

@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "med-llm-autoeval"
+version = "0.1.0"
+description = ""
+authors = ["dkshjn <dakshjain17@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+argparse = "^1.4.0"
+tqdm = "^4.66.2"
+datasets = "^2.17.0"
+pandas = "^2.2.0"
+logging = "^0.4.9.6"
+dspy = { git = "https://github.com/stanfordnlp/dspy.git" }
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.2.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
