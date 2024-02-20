@@ -12,6 +12,8 @@ import logging
 from tqdm import tqdm
 from datasets import load_dataset, Dataset, load_from_disk
 
+from medprompt import DefaultModule
+
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 COT_PROMPTS = {
     "mmlu_general": "medmcqa",
@@ -910,15 +912,16 @@ def evaluate_model(dspy_module, benchmark_instance, model):
             benchmark_instance.train_data["gold"],
         )
         # Initialize MedpromptModule with trainset and shots
+        # print(trainset)
         module = dspy_module(trainset=trainset, shots=5)
         predictions = []
         # Generating predictions
         for question, options in tqdm(
             zip(
-                benchmark_instance.test_data["prompt"][:100],
-                benchmark_instance.test_data["optionsKey"][:100]
+                benchmark_instance.test_data["prompt"],
+                benchmark_instance.test_data["optionsKey"]
                 if "optionsKey" in benchmark_instance.test_data.column_names
-                else benchmark_instance.test_data["options"][:100],
+                else benchmark_instance.test_data["options"],
             ),
             desc="Generating Responses",
             unit="prompt",
@@ -927,9 +930,24 @@ def evaluate_model(dspy_module, benchmark_instance, model):
             predictions.append(response)
     except Exception as e:
         print(f"An error occurred while instantiating the module: {e}")
-        predictions = answer_prompt(benchmark_instance.test_data["prompt"][:100], model)
-
-    evaluate_predictions(predictions, benchmark_instance.test_data["gold"][:100])
+        module = DefaultModule()
+        predictions = []
+        # Generating predictions
+        for question, options in tqdm(
+            zip(
+                benchmark_instance.test_data["prompt"],
+                benchmark_instance.test_data["optionsKey"]
+                if "optionsKey" in benchmark_instance.test_data.column_names
+                else benchmark_instance.test_data["options"],
+            ),
+            desc="Generating Responses",
+            unit="prompt",
+        ):
+            response = module(question, options)
+            predictions.append(response.answer)
+        # predictions = answer_prompt(benchmark_instance.test_data["prompt"][:10], model)
+    print(predictions)
+    evaluate_predictions(predictions, benchmark_instance.test_data["gold"])
 
 
 def evaluate_predictions(pred, ref):

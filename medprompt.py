@@ -63,9 +63,23 @@ class MultipleQABot(dspy.Module):
 
     def forward(self, question, options):
         answer = self.generate_answer(question=question, options=options)
+        dspy.Suggest(len(answer) < 5,
+        "Answer should be either one character or a short one.")
+
 
         return answer
 
+class DefaultModule(dspy.Module):
+    def __init__(self):
+        super().__init__()
+        self.generate_answer = dspy.Predict(MultipleChoiceQA)
+
+    def forward(self, question, options):
+        answer = self.generate_answer(question=question, options=options)
+        dspy.Suggest(len(answer) < 5,
+        "Answer should be either one character or a short one.")
+
+        return answer
 
 class Ensemble(Teleprompter):
     def __init__(self, *, reduce_fn=None, size=None, deterministic=False):
