@@ -872,8 +872,8 @@ def hfmodel_setting(model_name):
     return model
 
 
-def together_setting(model_name, API_KEY):
-    model = dspy.Together(model=model_name, api_key=API_KEY)
+def together_setting(model_name):
+    model = dspy.Together(model=model_name)
     dspy.settings.configure(lm=model)
     return model
 
@@ -912,16 +912,18 @@ def evaluate_model(dspy_module, benchmark_instance, model):
             benchmark_instance.train_data["gold"],
         )
         # Initialize MedpromptModule with trainset and shots
-        # print(trainset)
+        print(len(trainset))
+        # model1 = dspy.HFModel(model="google/flan-t5-base")
+        # dspy.settings.configure(lm=model1)
         module = dspy_module(trainset=trainset, shots=5)
         predictions = []
         # Generating predictions
         for question, options in tqdm(
             zip(
-                benchmark_instance.test_data["prompt"],
-                benchmark_instance.test_data["optionsKey"]
+                benchmark_instance.test_data["prompt"][:10],
+                benchmark_instance.test_data["optionsKey"][:10]
                 if "optionsKey" in benchmark_instance.test_data.column_names
-                else benchmark_instance.test_data["options"],
+                else benchmark_instance.test_data["options"][:10],
             ),
             desc="Generating Responses",
             unit="prompt",
@@ -935,10 +937,10 @@ def evaluate_model(dspy_module, benchmark_instance, model):
         # Generating predictions
         for question, options in tqdm(
             zip(
-                benchmark_instance.test_data["prompt"],
-                benchmark_instance.test_data["optionsKey"]
+                benchmark_instance.test_data["prompt"][:10],
+                benchmark_instance.test_data["optionsKey"][:10]
                 if "optionsKey" in benchmark_instance.test_data.column_names
-                else benchmark_instance.test_data["options"],
+                else benchmark_instance.test_data["options"][:10],
             ),
             desc="Generating Responses",
             unit="prompt",
@@ -947,7 +949,7 @@ def evaluate_model(dspy_module, benchmark_instance, model):
             predictions.append(response.answer)
         # predictions = answer_prompt(benchmark_instance.test_data["prompt"][:10], model)
     print(predictions)
-    evaluate_predictions(predictions, benchmark_instance.test_data["gold"])
+    evaluate_predictions(predictions, benchmark_instance.test_data["gold"][:10])
 
 
 def evaluate_predictions(pred, ref):
@@ -958,10 +960,11 @@ def evaluate_predictions(pred, ref):
 
 
 def test(model, api_key, dspy_module, benchmark, shots):
+
     if model in ["gpt-3.5-turbo", "gpt-4-turbo-preview"]:
         model = model_setting(model, api_key)
-    elif len(api_key) > 10:
-        model = together_setting(model, api_key)
+    elif model in ["mistralai/Mistral-7B-Instruct-v0.2"] or len(api_key) > 10:
+        model = together_setting(model)
     else:
         model = hfmodel_setting(model)
 

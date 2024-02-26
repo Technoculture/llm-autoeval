@@ -114,23 +114,49 @@ class Ensemble(Teleprompter):
         return EnsembledProgram()
 
 
+# class MedpromptModule(dspy.Module):
+#     store_correct_cot = classmethod(store_correct_cot)
+
+#     def __init__(self, trainset, shots):
+#         super().__init__()
+#         self.trainset = trainset
+#         self.shots = shots
+#         pass
+
+#     def forward(self, question, options):
+#         # KNN Fewshot
+#         knn_teleprompter = KNNFewShot(KNN, self.shots, self.trainset)
+#         compiled_knn = knn_teleprompter.compile(MultipleQABot(), trainset=self.trainset)
+
+#         # Ensemble
+#         programs = [compiled_knn]
+#         ensembled_program = Ensemble(reduce_fn=dspy.majority).compile(programs)
+#         pred_response = ensembled_program(question=question, options=options)
+#         generated_response = pred_response.answer
+#         return generated_response
+    
 class MedpromptModule(dspy.Module):
     store_correct_cot = classmethod(store_correct_cot)
 
-    def __init__(self, trainset, shots):
+    def __init__(self, trainset, shots, compile=True):
         super().__init__()
         self.trainset = trainset
         self.shots = shots
+        self.compile = compile
+        self.store_correct_cot
         pass
 
     def forward(self, question, options):
         # KNN Fewshot
-        knn_teleprompter = KNNFewShot(KNN, self.shots, self.trainset)
-        compiled_knn = knn_teleprompter.compile(MultipleQABot(), trainset=self.trainset)
+        if self.compile:
+          knn_teleprompter = KNNFewShot(KNN, self.shots, self.trainset)
+          compiled_knn = knn_teleprompter.compile(MultipleQABot(), trainset=self.trainset)
+          compiled_knn.save('compiled_knn_mmlu_medical.json')
 
-        # Ensemble
-        programs = [compiled_knn]
-        ensembled_program = Ensemble(reduce_fn=dspy.majority).compile(programs)
-        pred_response = ensembled_program(question=question, options=options)
+        else:
+          mqa = MultipleQABot()
+          compiled_knn = mqa.load('compiled_knn_mmlu_medical.json')
+
+        pred_response = compiled_knn(question=question, options=options)
         generated_response = pred_response.answer
         return generated_response
