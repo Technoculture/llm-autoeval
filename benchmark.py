@@ -50,6 +50,7 @@ def benchmark_factory(name):
         "truthfulqa": TruthfulQA,
         "gsm8k": GSM8K,
         "mmlu_general": MMLU,
+        "mixqa" : MixQA,
     }
     if name not in factories:
         raise ValueError(
@@ -194,11 +195,11 @@ class Benchmark:
         :param local_path: str (optional), the path to a directory holding train and test json local data files.
         """
         print("=" * 50 + f"\nLoading data for benchmark {self.name}.\n")
-        if self.name == "hellaswag":
+        if self.name == "mixqa":
             if partition == "train":
-                self.train_data = load_dataset("Rowan/hellaswag", split=partition)
+                self.train_data = load_dataset("dkshjn/mixqa", split=partition)
             elif partition in ["test", "validation"]:
-                self.test_data = load_dataset("Rowan/hellaswag", split=partition)
+                self.test_data = load_dataset("dkshjn/mixqa", split=partition)
         else:
             if partition not in self.splits:
                 raise ValueError(
@@ -815,6 +816,22 @@ class Winogrande(Benchmark):
         row["gold"] = chr(ord("A") + answer) if answer in [1, 2] else None
         return row
 
+class MixQA(Benchmark):
+
+    """
+    Huggingface card: https://huggingface.co/datasets/dkshjn/mixqa
+    """
+
+    def __init__(self, name="mixqa") -> None:
+        super().__init__(name)
+        self.hub_name = "dkshjn/mixqa"
+        self.dir_name = "dkshjn__mixqa"
+        self.path = os.path.join(ROOT_DIR, "benchmarks", "datasets", self.dir_name)
+        self.splits = ["train", "test"]
+
+    @staticmethod
+    def custom_preprocessing(row):
+        pass
 
 def format_mcq(question, options):
     """
