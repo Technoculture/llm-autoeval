@@ -50,7 +50,7 @@ def benchmark_factory(name):
         "truthfulqa": TruthfulQA,
         "gsm8k": GSM8K,
         "mmlu_general": MMLU,
-        "mixqa" : MixQA,
+        "mixqa": MixQA,
     }
     if name not in factories:
         raise ValueError(
@@ -816,6 +816,7 @@ class Winogrande(Benchmark):
         row["gold"] = chr(ord("A") + answer) if answer in [1, 2] else None
         return row
 
+
 class MixQA(Benchmark):
 
     """
@@ -832,6 +833,7 @@ class MixQA(Benchmark):
     @staticmethod
     def custom_preprocessing(row):
         pass
+
 
 def format_mcq(question, options):
     """
@@ -977,7 +979,6 @@ def evaluate_predictions(pred, ref):
 
 
 def test(model, api_key, dspy_module, benchmark, shots):
-
     if model in ["gpt-3.5-turbo", "gpt-4-turbo-preview"]:
         model = model_setting(model, api_key)
     elif model in ["mistralai/Mistral-7B-Instruct-v0.2"] or len(api_key) > 10:

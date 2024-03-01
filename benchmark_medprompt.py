@@ -33,7 +33,7 @@ class BenchmarkOptions(str, Enum):
     nous = "nous"
     medical = "medical"
     medical_openllm = "medical-openllm"
-    mixqa = 'mixqa'
+    mixqa = "mixqa"
 
 
 def main(args):
