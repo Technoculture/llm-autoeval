@@ -4,6 +4,10 @@ import random
 from dspy.teleprompt import KNNFewShot
 from dspy.predict.knn import KNN
 from dspy.teleprompt.teleprompt import Teleprompter
+from datasets import Dataset
+import os
+
+hf_token = os.environ.get("HF_TOKEN")
 
 
 class MultipleChoiceQA(dspy.Signature):
@@ -36,6 +40,7 @@ def store_correct_cot(
     cls, questions: list[str], option_sets: list[str], answers: list[str]
 ) -> list[str]:
     train_set = []
+    rows = []
     generate_answer = dspy.ChainOfThought(MultipleChoiceQA)
     for question, options, answer in tqdm(
         zip(questions, option_sets, answers), desc="Generating COTs", unit="cot"
@@ -51,7 +56,30 @@ def store_correct_cot(
                 answer=answer,
             ).with_inputs("question", "options")
 
+            row = {
+                "question": question,
+                "options": options,
+                "context": pred_response.rationale,
+                "answer": answer,
+            }
+
             train_set.append(example)
+            rows.append(row)
+
+    # with open('mixqa_correct_cot_trainset.json', 'w') as json_file:
+    #     json.dump([vars(example) for example in train_set], json_file)
+
+    # hf_dataset = Dataset.from_dict({'train':rows})
+    hf_dataset = Dataset.from_dict(
+        {
+            "question": [row["question"] for row in rows],
+            "options": [row["options"] for row in rows],
+            "context": [row["context"] for row in rows],
+            "answer": [row["answer"] for row in rows],
+        }
+    )
+    print(hf_dataset)
+    hf_dataset.push_to_hub("dkshjn/mixqa_cot_2", token=hf_token)
 
     return train_set
 
@@ -63,11 +91,12 @@ class MultipleQABot(dspy.Module):
 
     def forward(self, question, options):
         answer = self.generate_answer(question=question, options=options)
-        dspy.Suggest(len(answer) < 5,
-        "Answer should be either one character or a short one.")
-
+        dspy.Suggest(
+            len(answer) < 5, "Answer should be either one character or a short one."
+        )
 
         return answer
+
 
 class DefaultModule(dspy.Module):
     def __init__(self):
@@ -76,10 +105,12 @@ class DefaultModule(dspy.Module):
 
     def forward(self, question, options):
         answer = self.generate_answer(question=question, options=options)
-        dspy.Suggest(len(answer) < 5,
-        "Answer should be either one character or a short one.")
+        dspy.Suggest(
+            len(answer) < 5, "Answer should be either one character or a short one."
+        )
 
         return answer
+
 
 class Ensemble(Teleprompter):
     def __init__(self, *, reduce_fn=None, size=None, deterministic=False):
@@ -129,8 +160,8 @@ class MedpromptModule(dspy.Module):
         compiled_knn = knn_teleprompter.compile(MultipleQABot(), trainset=self.trainset)
 
         # Ensemble
-        programs = [compiled_knn]
-        ensembled_program = Ensemble(reduce_fn=dspy.majority).compile(programs)
-        pred_response = ensembled_program(question=question, options=options)
+        # programs = [compiled_knn]
+        # ensembled_program = Ensemble(reduce_fn=dspy.majority).compile(programs)
+        pred_response = compiled_knn(question=question, options=options)
         generated_response = pred_response.answer
         return generated_response

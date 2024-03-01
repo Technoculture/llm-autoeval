@@ -50,6 +50,7 @@ def benchmark_factory(name):
         "truthfulqa": TruthfulQA,
         "gsm8k": GSM8K,
         "mmlu_general": MMLU,
+        "mixqa": MixQA,
     }
     if name not in factories:
         raise ValueError(
@@ -194,11 +195,11 @@ class Benchmark:
         :param local_path: str (optional), the path to a directory holding train and test json local data files.
         """
         print("=" * 50 + f"\nLoading data for benchmark {self.name}.\n")
-        if self.name == "hellaswag":
+        if self.name == "mixqa":
             if partition == "train":
-                self.train_data = load_dataset("Rowan/hellaswag", split=partition)
+                self.train_data = load_dataset("dkshjn/mixqa", split=partition)
             elif partition in ["test", "validation"]:
-                self.test_data = load_dataset("Rowan/hellaswag", split=partition)
+                self.test_data = load_dataset("dkshjn/mixqa", split=partition)
         else:
             if partition not in self.splits:
                 raise ValueError(
@@ -816,6 +817,24 @@ class Winogrande(Benchmark):
         return row
 
 
+class MixQA(Benchmark):
+
+    """
+    Huggingface card: https://huggingface.co/datasets/dkshjn/mixqa
+    """
+
+    def __init__(self, name="mixqa") -> None:
+        super().__init__(name)
+        self.hub_name = "dkshjn/mixqa"
+        self.dir_name = "dkshjn__mixqa"
+        self.path = os.path.join(ROOT_DIR, "benchmarks", "datasets", self.dir_name)
+        self.splits = ["train", "test"]
+
+    @staticmethod
+    def custom_preprocessing(row):
+        pass
+
+
 def format_mcq(question, options):
     """
     Formats a multiple choice question with the given options.
@@ -872,8 +891,8 @@ def hfmodel_setting(model_name):
     return model
 
 
-def together_setting(model_name, API_KEY):
-    model = dspy.Together(model=model_name, api_key=API_KEY)
+def together_setting(model_name):
+    model = dspy.Together(model=model_name)
     dspy.settings.configure(lm=model)
     return model
 
@@ -912,16 +931,18 @@ def evaluate_model(dspy_module, benchmark_instance, model):
             benchmark_instance.train_data["gold"],
         )
         # Initialize MedpromptModule with trainset and shots
-        # print(trainset)
+        print(len(trainset))
+        # model1 = dspy.HFModel(model="google/flan-t5-base")
+        # dspy.settings.configure(lm=model1)
         module = dspy_module(trainset=trainset, shots=5)
         predictions = []
         # Generating predictions
         for question, options in tqdm(
             zip(
-                benchmark_instance.test_data["prompt"],
-                benchmark_instance.test_data["optionsKey"]
+                benchmark_instance.test_data["prompt"][:10],
+                benchmark_instance.test_data["optionsKey"][:10]
                 if "optionsKey" in benchmark_instance.test_data.column_names
-                else benchmark_instance.test_data["options"],
+                else benchmark_instance.test_data["options"][:10],
             ),
             desc="Generating Responses",
             unit="prompt",
@@ -935,10 +956,10 @@ def evaluate_model(dspy_module, benchmark_instance, model):
         # Generating predictions
         for question, options in tqdm(
             zip(
-                benchmark_instance.test_data["prompt"],
-                benchmark_instance.test_data["optionsKey"]
+                benchmark_instance.test_data["prompt"][:10],
+                benchmark_instance.test_data["optionsKey"][:10]
                 if "optionsKey" in benchmark_instance.test_data.column_names
-                else benchmark_instance.test_data["options"],
+                else benchmark_instance.test_data["options"][:10],
             ),
             desc="Generating Responses",
             unit="prompt",
@@ -947,7 +968,7 @@ def evaluate_model(dspy_module, benchmark_instance, model):
             predictions.append(response.answer)
         # predictions = answer_prompt(benchmark_instance.test_data["prompt"][:10], model)
     print(predictions)
-    evaluate_predictions(predictions, benchmark_instance.test_data["gold"])
+    evaluate_predictions(predictions, benchmark_instance.test_data["gold"][:10])
 
 
 def evaluate_predictions(pred, ref):
@@ -960,8 +981,8 @@ def evaluate_predictions(pred, ref):
 def test(model, api_key, dspy_module, benchmark, shots):
     if model in ["gpt-3.5-turbo", "gpt-4-turbo-preview"]:
         model = model_setting(model, api_key)
-    elif len(api_key) > 10:
-        model = together_setting(model, api_key)
+    elif model in ["mistralai/Mistral-7B-Instruct-v0.2"] or len(api_key) > 10:
+        model = together_setting(model)
     else:
         model = hfmodel_setting(model)
 

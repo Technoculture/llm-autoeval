@@ -1,0 +1,10 @@
+{
+  "generate_answer": {
+    "lm": null,
+    "traces": [],
+    "train": [],
+    "demos": [],
+    "signature_instructions": "Answer questions with single letter answers.",
+    "signature_prefix": "Answer:"
+  }
+}
